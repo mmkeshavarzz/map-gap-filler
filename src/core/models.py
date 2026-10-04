@@ -113,16 +113,18 @@ class AuditHistoryEntry(BaseModel):
 # ==========================================
 # 3. مختصات و اعتبارسنجی یاسوج (پیشنهاد ۳)
 # ==========================================
+
+# راهنما: کادر جغرافیایی یاسوج بیرون کلاس تعریف شده تا پایدنتیک به عنوان فیلد داده‌ای بهش گیر نده
+YASUJ_BOUNDING_BOX = {
+    "min_lat": 30.5500, "max_lat": 30.7500,
+    "min_lon": 51.5000, "max_lon": 51.7200
+}
+
 class Coordinates(BaseModel):
     """مختصات جغرافیایی به فرمت WGS84. مجهز به کادر جغرافیایی (Bounding Box) بافت شهری یاسوج."""
     latitude: float = Field(..., description="عرض جغرافیایی")
     longitude: float = Field(..., description="طول جغرافیایی")
     is_in_yasuj_box: bool = Field(True, description="آیا مختصات قطعاً درون کادر شهری یاسوج است؟")
-
-    YASUJ_BOUNDING_BOX = {
-        "min_lat": 30.5500, "max_lat": 30.7500,
-        "min_lon": 51.5000, "max_lon": 51.7200
-    }
 
     @field_validator("latitude")
     @classmethod
@@ -140,8 +142,9 @@ class Coordinates(BaseModel):
 
     @model_validator(mode="after")
     def check_yasuj_boundaries(self) -> "Coordinates":
-        in_lat = self.YASUJ_BOUNDING_BOX["min_lat"] <= self.latitude <= self.YASUJ_BOUNDING_BOX["max_lat"]
-        in_lon = self.YASUJ_BOUNDING_BOX["min_lon"] <= self.longitude <= self.YASUJ_BOUNDING_BOX["max_lon"]
+        # راهنما: مستقیماً از متغیر Bounding Box تعریف شده در بالا استفاده می‌کند
+        in_lat = YASUJ_BOUNDING_BOX["min_lat"] <= self.latitude <= YASUJ_BOUNDING_BOX["max_lat"]
+        in_lon = YASUJ_BOUNDING_BOX["min_lon"] <= self.longitude <= YASUJ_BOUNDING_BOX["max_lon"]
         self.is_in_yasuj_box = bool(in_lat and in_lon)
         return self
 
