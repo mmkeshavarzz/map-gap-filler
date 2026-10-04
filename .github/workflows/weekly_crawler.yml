@@ -35,10 +35,14 @@ jobs:
           # اینجا فرمانده کل (pipeline یا main) رو با فلگ ۷ روزه صدا می‌زنیم!
           python -m src.pipeline --days 7
 
-      - name: 💾 ذخیره و کامیت کردن خروجی‌ها و کش دیتابیس
+            # راهنما: ذخیره نتایج در صورت وجود تغییرات (بدون حساسیت به عدم وجود پوشه)
+      - name: ذخیره و کامیت کردن خروجی‌ها و کش دیتابیس 💾
         run: |
           git config --global user.name 'MapGap-Bot'
-          git config --global user.email 'bot@gapfiller.local'
-          git add data/ exports/
-          git commit -m "🤖 خروجی دیتای ۷ روز اخیر - $(date +'%Y-%m-%d')" || echo "موردی برای ذخیره پیدا نشد!"
-          git push
+          git config --global user.email 'bot@mapgap.local'
+          
+          # به جای گیر دادن به فولدر خاص، هر چی فایل جدید یا تغییر کرده رو ادد کن
+          git add -A
+          
+          # فقط اگر واقعا تغییری بود کامیت کن تا ارور نده
+          git diff --staged --quiet || (git commit -m "chore: بروزرسانی خودکار دیتابیس و گزارش‌ها [skip ci]" && git push)
