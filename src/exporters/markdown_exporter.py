@@ -57,22 +57,24 @@ pie title توزیع کلاس کیفیت
 "Trash" : {trash}
 "Other" : {total - (platinum + trash)}
 
-## 🏆 برترین‌ها
-| ردیف | نام و صنف | نمره | وضعیت |
-| :--- | :--- | :--- | :--- |
-"""
+        ## 🏆 برترین‌ها
+        | ردیف | نام و صنف | نمره | وضعیت |
+        | :--- | :--- | :--- | :--- |
+        """
 
-top_pois = sorted(batch_data, key=lambda x: x.health_report.health_score, reverse=True)[:5]
-for idx, poi in enumerate(top_pois, start=1):
-emoji = self._get_emoji_for_category(poi.category.primary_fa)
-# فیچر 9: رنگی کردن HTML داخل مارک‌داون
-score_html = f"<span style='color:green; font-weight:bold;'>{poi.health_report.health_score}</span>"
-md_content += f"| {idx} | {emoji} **{poi.title}** | {score_html} | {poi.health_report.dashboard_badges} |\n"
+        # راهنما: سورت کردن برترین مکان‌ها بر اساس امتیاز سلامت برای جدول تاپ ۵
+        top_pois = sorted(batch_data, key=lambda x: x.health_report.health_score, reverse=True)[:5]
+        for idx, poi in enumerate(top_pois, start=1):
+            # راهنما: دریافت ایموجی متناسب با صنف
+            emoji = self._get_emoji_for_category(poi.category.primary_fa)
+            # فیچر 9: رنگی کردن HTML داخل مارک‌داون
+            score_html = f"<span style='color:green; font-weight:bold;'>{poi.health_report.health_score}</span>"
+            md_content += f"| {idx} | {emoji} **{poi.title}** | {score_html} | {poi.health_report.dashboard_badges} |\n"
 
-# فیچر 2: بخش بازشو (Collapsible) برای لیست طولانی
-# فیچر 7: باکس نقل‌قول ارورها
-# فیچر 8: پاورقی هوشمند
-md_content += """
+        # فیچر 2: بخش بازشو (Collapsible) برای لیست طولانی
+        # فیچر 7: باکس نقل‌قول ارورها
+        # فیچر 8: پاورقی هوشمند
+        md_content += """
 ## 🚨 لاگ نواقص
 <details>
 <summary>کلیک کنید تا خنده‌دارترین ارورهای این بخش را ببینید 👇</summary>
@@ -88,14 +90,17 @@ md_content += """
 [^1]: ارور کشف شده توسط ربات `DefectFinder` در آدرس‌دهی.
 [^2]: ارور فیلتر شده توسط کادر شهری یاسوج.
 """
-with open(file_path, "w", encoding="utf-8") as f:
-f.write(md_content)
 
-self._mock_notion_bridge(md_content, batch_id)
+        # راهنما: ذخیره فایل نهایی مارک‌داون
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(md_content)
 
-# فیچر 10: خروجی خلاصه مخصوص ربات تلگرام
-telegram_msg = f"🚀 بچ {batch_id} پردازش شد!\nکل: {total} | عالی: {platinum}\n#گزارش_روزانه"
-with open(file_path.with_suffix('.txt'), "w", encoding="utf-8") as f:
-f.write(telegram_msg)
+        # راهنما: فراخوانی آزمایشی نوشن
+        self._mock_notion_bridge(md_content, batch_id)
 
-print(f"📜 Pro Markdown Report (with Mermaid & HTML) ready at: {file_path}")
+        # فیچر 10: خروجی خلاصه مخصوص ربات تلگرام
+        telegram_msg = f"🚀 بچ {batch_id} پردازش شد!\nکل: {total} | عالی: {platinum}\n#گزارش_روزانه"
+        with open(file_path.with_suffix('.txt'), "w", encoding="utf-8") as f:
+            f.write(telegram_msg)
+
+        print(f"📜 Pro Markdown Report (with Mermaid & HTML) ready at: {file_path}")
