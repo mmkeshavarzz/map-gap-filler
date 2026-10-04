@@ -1,0 +1,51 @@
+{
+  "version": "1.0.0",
+  "proxy_settings": {
+    "enabled": false,
+    "rotation_strategy": "round_robin",
+    "_comment_strategy": "استراتژی تغییر پروکسی: 'round_robin' (نوبتی)، 'random' (تصادفی)، یا 'failover' (فقط زمان قطعی)",
+    "timeout_seconds": 15,
+    "max_retries": 3
+  },
+  "bypass_domains": [
+    "api.neshan.org",
+    "map.ir"
+  ],
+  "_comment_bypass": "سرویس‌های ایرانی مثل نشان که نباید از پروکسی خارجی رد بشن تا سرعت بالا بمونه و تحریم نکنند",
+  "proxies": {
+    "telegram": [
+      {
+        "_comment": "پروکسی اختصاصی تلگرام (ساکس ۵ یا MTProto)",
+        "id": "tg_proxy_1",
+        "protocol": "socks5",
+        "host": "127.0.0.1",
+        "port": 1080,
+        "username": "your_username_here",
+        "password": "your_password_here",
+        "is_active": true
+      }
+    ],
+    "instagram": [
+      {
+        "_comment": "پروکسی مسکونی/دیتاسنتر HTTP/HTTPS برای اینستاگرام",
+        "id": "insta_proxy_1",
+        "protocol": "http",
+        "host": "proxy.example.com",
+        "port": 8080,
+        "username": "your_username_here",
+        "password": "your_password_here",
+        "is_active": true
+      },
+      {
+        "_comment": "پروکسی رزرو برای مواقعی که اولی بلاک شد",
+        "id": "insta_proxy_2",
+        "protocol": "http",
+        "host": "proxy2.example.com",
+        "port": 8080,
+        "username": null,
+        "password": null,
+        "is_active": false
+      }
+    ]
+  }
+}
