@@ -49,7 +49,6 @@ def clean_persian_text(text: Optional[str]) -> str:
 # 1. دسته‌بندی هوشمند دو زبانه (پیشنهاد ۱۰)
 # ==========================================
 CATEGORY_TAXONOMY: Dict[str, Dict[str, str]] = {
-    # اگر صنف جدیدی پیدا کردی، کافیه یه سطر جدید اینجا اضافه کنی
     "کافه": {"en": "cafe", "osm": "amenity=cafe"},
     "رستوران": {"en": "restaurant", "osm": "amenity=restaurant"},
     "کبابی": {"en": "kebab_restaurant", "osm": "amenity=restaurant;cuisine=kebab"},
@@ -89,10 +88,10 @@ class BusinessCategory(BaseModel):
 # 2. وضعیت و تاریخچه استعلام در نقشه‌ها (پیشنهاد ۹)
 # ==========================================
 class AuditStatus(str, Enum):
-    NOT_REGISTERED = "not_registered"  # غایب در نقشه (مهم‌ترین طعمه!)
-    ALREADY_EXISTS = "already_exists"  # قبلاً توسط دیگران ثبت شده
-    NEEDS_REVIEW = "needs_review"      # شباهت اسمی مشکوک؛ نیازمند بازبینی اپراتور
-    UNKNOWN = "unknown"                # تازه استخراج‌شده و در صف بررسی
+    NOT_REGISTERED = "not_registered"
+    ALREADY_EXISTS = "already_exists"
+    NEEDS_REVIEW = "needs_review"
+    UNKNOWN = "unknown"
 
 
 class SourcePlatform(str, Enum):
@@ -115,20 +114,14 @@ class AuditHistoryEntry(BaseModel):
 # 3. مختصات و اعتبارسنجی یاسوج (پیشنهاد ۳)
 # ==========================================
 class Coordinates(BaseModel):
-    """
-    مختصات جغرافیایی به فرمت WGS84.
-    مجهز به کادر جغرافیایی (Bounding Box) بافت شهری یاسوج.
-    """
+    """مختصات جغرافیایی به فرمت WGS84. مجهز به کادر جغرافیایی (Bounding Box) بافت شهری یاسوج."""
     latitude: float = Field(..., description="عرض جغرافیایی")
     longitude: float = Field(..., description="طول جغرافیایی")
     is_in_yasuj_box: bool = Field(True, description="آیا مختصات قطعاً درون کادر شهری یاسوج است؟")
 
-    # محدوده چهارگوشه شهر یاسوج (میتونی در صورت نیاز شعاع رو از اینجا بازتر کنی)
     YASUJ_BOUNDING_BOX = {
-        "min_lat": 30.5500,
-        "max_lat": 30.7500,
-        "min_lon": 51.5000,
-        "max_lon": 51.7200
+        "min_lat": 30.5500, "max_lat": 30.7500,
+        "min_lon": 51.5000, "max_lon": 51.7200
     }
 
     @field_validator("latitude")
@@ -147,7 +140,6 @@ class Coordinates(BaseModel):
 
     @model_validator(mode="after")
     def check_yasuj_boundaries(self) -> "Coordinates":
-        """بررسی اینکه آیا نقطه در محدوده یاسوج قرار گرفته است یا نه."""
         in_lat = self.YASUJ_BOUNDING_BOX["min_lat"] <= self.latitude <= self.YASUJ_BOUNDING_BOX["max_lat"]
         in_lon = self.YASUJ_BOUNDING_BOX["min_lon"] <= self.longitude <= self.YASUJ_BOUNDING_BOX["max_lon"]
         self.is_in_yasuj_box = bool(in_lat and in_lon)
@@ -158,10 +150,6 @@ class Coordinates(BaseModel):
 # 4. ساعات کاری هفتگی (پیشنهاد ۱)
 # ==========================================
 class WorkingHours(BaseModel):
-    """
-    ساعات کاری کسب‌وکار در طول هفته.
-    فرمت پیشنهادی برای بازه‌ها: '09:00-14:00,16:30-22:30' یا 'تعطیل'
-    """
     saturday: Optional[str] = Field("09:00-22:00", description="شنبه")
     sunday: Optional[str] = Field("09:00-22:00", description="یک‌شنبه")
     monday: Optional[str] = Field("09:00-22:00", description="دوشنبه")
@@ -169,48 +157,42 @@ class WorkingHours(BaseModel):
     wednesday: Optional[str] = Field("09:00-22:00", description="چهارشنبه")
     thursday: Optional[str] = Field("09:00-22:00", description="پنج‌شنبه")
     friday: Optional[str] = Field("تعطیل", description="جمعه")
-    description_notes: Optional[str] = Field(None, description="توضیحات خاص مانند ایام سوگواری یا شیفت ظهر")
+    description_notes: Optional[str] = Field(None, description="توضیحات خاص")
 
 
 # ==========================================
 # 5. امکانات رفاهی و خدمات (پیشنهاد ۷)
 # ==========================================
 class Facilities(BaseModel):
-    """امکانات و ویژگی‌های فروشگاه/کسب‌وکار برای غنی‌سازی دیتابیس نقشه."""
-    has_pos_terminal: bool = Field(True, description="دارای دستگاه پوز/کارت‌خوان")
-    has_parking: bool = Field(False, description="پارکینگ اختصاصی یا جای پارک آسان")
-    has_delivery: bool = Field(False, description="سرویس بیرون‌بر یا ارسال با پیک")
-    has_free_wifi: bool = Field(False, description="اینترنت وای‌فای رایگان")
-    accepts_online_reservations: bool = Field(False, description="امکان رزرو نوبت آنلاین")
-    outdoor_seating: bool = Field(False, description="فضای نشستن در محیط باز")
-    extra_tags: List[str] = Field(default_factory=list, description="تگ‌های خاص مانند 'مناسب کودکان'")
+    has_pos_terminal: bool = Field(True, description="دارای دستگاه پوز")
+    has_parking: bool = Field(False, description="پارکینگ اختصاصی")
+    has_delivery: bool = Field(False, description="سرویس بیرون‌بر")
+    has_free_wifi: bool = Field(False, description="وای‌فای رایگان")
+    accepts_online_reservations: bool = Field(False, description="رزرو آنلاین")
+    outdoor_seating: bool = Field(False, description="فضای نشستن باز")
+    extra_tags: List[str] = Field(default_factory=list)
 
 
 # ==========================================
 # 6. تفکیک ریزامتیازهای کیفیت داده (پیشنهاد ۵)
 # ==========================================
 class ConfidenceBreakdown(BaseModel):
-    """
-    شفاف‌سازی امتیاز اعتماد کل به رکورد داده (بین ۰ تا ۱).
-    به تفکیک فاکتورهای حیاتی نقشه.
-    """
-    has_valid_phone: float = Field(0.0, description="سهم اعتبارسنجی تلفن ثابت یا همراه")
-    has_precise_coordinates: float = Field(0.0, description="سهم دقت لوکیشن و قرارگیری در یاسوج")
-    has_rich_address: float = Field(0.0, description="سهم آدرس متنی دقیق")
-    has_media: float = Field(0.0, description="سهم وجود عکس معتبر از تابلو یا محیط")
-    has_working_hours: float = Field(0.0, description="سهم داشتن ساعات کاری")
-    total_score: float = Field(0.0, ge=0.0, le=1.0, description="امتیاز تجمعی نهایی")
+    has_valid_phone: float = Field(0.0)
+    has_precise_coordinates: float = Field(0.0)
+    has_rich_address: float = Field(0.0)
+    has_media: float = Field(0.0)
+    has_working_hours: float = Field(0.0)
+    total_score: float = Field(0.0, ge=0.0, le=1.0)
 
 
 # ==========================================
 # 7. اطلاعات ارتباطی و تماس
 # ==========================================
 class ContactInfo(BaseModel):
-    """اطلاعات ارتباطی همراه با استانداردسازی کامل شماره‌ها."""
-    phone_numbers: List[str] = Field(default_factory=list, description="تلفن‌های معتبر ۱۰ رقمی یا موبایل")
-    instagram_id: Optional[str] = Field(None, description="آیدی پیج بدون کاراکتر @")
-    telegram_id: Optional[str] = Field(None, description="یوزرنیم یا کانال تلگرام")
-    website: Optional[str] = Field(None, description="وب‌سایت رسمی کسب‌وکار")
+    phone_numbers: List[str] = Field(default_factory=list, description="تلفن‌های معتبر")
+    instagram_id: Optional[str] = Field(None, description="آیدی پیج")
+    telegram_id: Optional[str] = Field(None, description="یوزرنیم تلگرام")
+    website: Optional[str] = Field(None, description="وب‌سایت رسمی")
 
     @field_validator("phone_numbers")
     @classmethod
@@ -222,17 +204,14 @@ class ContactInfo(BaseModel):
             num = num.translate(fa_to_en)
             digits = re.sub(r"\D", "", num)
 
-            # اصلاح پیشوندهای بین‌المللی
             if digits.startswith("98") and len(digits) == 12:
                 digits = "0" + digits[2:]
             elif digits.startswith("0098") and len(digits) == 14:
                 digits = "0" + digits[4:]
 
-            # شماره ۱۱ رقمی همراه یا شماره ثابت استانی با کد یاسوج (074)
             if len(digits) == 11 and (digits.startswith("09") or digits.startswith("074")):
                 if digits not in cleaned_list:
                     cleaned_list.append(digits)
-            # اگر شماره محلی ۸ رقمی بدون پیش‌شماره وارد شده بود
             elif len(digits) == 8 and not digits.startswith("0"):
                 yasuj_phone = f"074{digits}"
                 if yasuj_phone not in cleaned_list:
@@ -253,7 +232,6 @@ class ContactInfo(BaseModel):
 # 8. نتایج ممیزی روی نقشه‌ها (Audit Meta)
 # ==========================================
 class AuditResult(BaseModel):
-    """ارزیابی وضعیت رکورد در نشان و گوگل و بایگانی تاریخچه آن."""
     neshan_status: AuditStatus = AuditStatus.UNKNOWN
     neshan_matched_title: Optional[str] = None
     neshan_distance_meters: Optional[float] = None
@@ -261,10 +239,9 @@ class AuditResult(BaseModel):
     
     google_status: AuditStatus = AuditStatus.UNKNOWN
     last_audited_at: Optional[datetime] = None
-    history: List[AuditHistoryEntry] = Field(default_factory=list, description="تاریخچه کامل تغییر وضعیت‌ها")
+    history: List[AuditHistoryEntry] = Field(default_factory=list)
 
     def record_change(self, platform: str, new_status: AuditStatus, note: Optional[str] = None):
-        """متد کمکی برای اضافه کردن سریع یک رویداد به تاریخچه."""
         prev = self.neshan_status if platform == "neshan" else self.google_status
         self.history.append(
             AuditHistoryEntry(
@@ -280,16 +257,31 @@ class AuditResult(BaseModel):
             self.google_status = new_status
         self.last_audited_at = datetime.utcnow()
 
+# ==========================================
+# 🚨🔥 NEW: 8.5. گزارش سلامت سایبورگ (Data Health Report)
+# ==========================================
+class DataHealthReport(BaseModel):
+    """
+    پرونده پزشکی دیتا که توسط HealthScorer و DefectFinder پر می‌شود.
+    """
+    health_score: float = Field(100.0, description="نمره سلامت از 0 تا 100")
+    tier: str = Field("UNKNOWN", description="کلاس کیفیت: PLATINUM, GOLD, SILVER, TRASH")
+    defects: List[str] = Field(default_factory=list, description="لیست جرائم و نواقص رکورد")
+    seo_readiness_index: str = Field("100/100", description="شاخص آمادگی سئو")
+    bounty_toman: int = Field(0, description="پاداش نقدی برای اصلاح انسانی (به تومان)")
+    can_be_auto_fixed: bool = Field(False, description="آیا اسکریپت می‌تواند نواقص را خودکار حل کند؟")
+    dashboard_badges: str = Field("📍✅ | 📞✅ | 🌐✅", description="بج‌های بصری داشبورد")
+    exporter_route: str = Field("exports/csv/uncategorized.csv", description="مسیر فایل خروجی مناسب این کلاس")
+
 
 # ==========================================
-# 9. مدل جامع و غول‌پیکر BusinessPOI (ادغام کامل هر ۱۰ پیشنهاد)
+# 9. مدل جامع و غول‌پیکر BusinessPOI 
 # ==========================================
 class BusinessPOI(BaseModel):
     """
     ستون فقرات اصلی پروژه map-gap-filler.
-    شامل تمام ۱۰ قابلیت هوشمند: هش خودکار، GeoJSON، امتیاز تفکیکی، ساعات کاری، مدیا و ...
     """
-    id: Optional[str] = Field(None, description="شناسه یکتا؛ در صورت خالی بودن خودکار با هش SHA256 تولید می‌شود")
+    id: Optional[str] = Field(None, description="شناسه یکتا؛ در صورت خالی بودن خودکار تولید می‌شود")
     title: str = Field(..., min_length=2, max_length=150, description="نام پالایش‌شده کسب‌وکار")
     category: BusinessCategory = Field(default_factory=lambda: BusinessCategory.model_validate("سایر"))
     
@@ -300,48 +292,36 @@ class BusinessPOI(BaseModel):
     coordinates: Optional[Coordinates] = None
     contacts: ContactInfo = Field(default_factory=ContactInfo)
     
-    # پیشنهاد ۶: تصاویر ویترین، تابلو، و منو
-    image_urls: List[str] = Field(default_factory=list, description="لینک عکس‌های تابلو یا فضای مغازه")
-    
-    # پیشنهاد ۱: ساعات کاری
+    image_urls: List[str] = Field(default_factory=list, description="لینک عکس‌ها")
     working_hours: WorkingHours = Field(default_factory=WorkingHours)
-    
-    # پیشنهاد ۷: امکانات و خدمات رفاهی
     facilities: Facilities = Field(default_factory=Facilities)
     
-    # خاستگاه استخراج داده
     source_platform: SourcePlatform = Field(..., description="پلتفرم اولیه استخراج")
-    source_url: Optional[str] = Field(None, description="لینک پست، پروفایل یا پیام مبدا")
-    raw_text: Optional[str] = Field(None, description="متن دست‌نخورده جهت ردیابی کراولر")
+    source_url: Optional[str] = Field(None, description="لینک پست مبدا")
+    raw_text: Optional[str] = Field(None, description="متن دست‌نخورده")
     
-    # بررسی روی نقشه‌ها
     audit: AuditResult = Field(default_factory=AuditResult)
-    
-    # پیشنهاد ۵: تفکیک امتیاز اعتبار
     confidence_breakdown: ConfidenceBreakdown = Field(default_factory=ConfidenceBreakdown)
     confidence_score: float = Field(0.0, ge=0.0, le=1.0, description="نمره کل اعتبار رکورد")
     
-    # متادیتای زمانی
+    # 🚨 فیلد جدید: پرونده سلامت (تزریق قابلیت‌های جدید)
+    health_report: DataHealthReport = Field(default_factory=DataHealthReport, description="گزارش صادر شده توسط قاضی!")
+
     created_at_jalali: Optional[str] = Field(None, description="تاریخ شمسی استخراج")
     discovered_at: datetime = Field(default_factory=datetime.utcnow)
 
-    # پیشنهاد ۴: پاکسازی خودکار ی/ک و علائم در عنوان و آدرس
     @field_validator("title", "address", mode="before")
     @classmethod
     def apply_persian_cleanup(cls, v: Any) -> str:
         return clean_persian_text(str(v))
 
-    # پیشنهاد ۲: تولید خودکار ID هش‌شده یکتا بر مبنای SHA-256
-    # و پیشنهاد ۵: محاسبه امتیاز کیفیت کل
     @model_validator(mode="after")
     def post_processing(self) -> "BusinessPOI":
-        # ۱. ساخت هش یکتا در صورت عدم وجود
         if not self.id:
             first_phone = self.contacts.phone_numbers[0] if self.contacts.phone_numbers else ""
             raw_seed = f"{self.title.strip().lower()}_{self.city.strip().lower()}_{first_phone}"
             self.id = hashlib.sha256(raw_seed.encode("utf-8")).hexdigest()[:16]
 
-        # ۲. محاسبه خودکار ریزامتیازهای Confidence Score
         c_score = 0.0
         cb = self.confidence_breakdown
 
@@ -350,7 +330,6 @@ class BusinessPOI(BaseModel):
             c_score += 0.25
 
         if self.coordinates:
-            # اگر مختصات داخل کادر یاسوج بود امتیاز بالاتر می‌گیرد
             cb.has_precise_coordinates = 0.35 if self.coordinates.is_in_yasuj_box else 0.15
             c_score += cb.has_precise_coordinates
 
@@ -370,12 +349,8 @@ class BusinessPOI(BaseModel):
         self.confidence_score = cb.total_score
         return self
 
-    # پیشنهاد ۸: تولید خروجی استاندارد نقشه (GeoJSON Feature)
     def to_geojson(self) -> Dict[str, Any]:
-        """
-        تبدیل مستقیم این کسب‌وکار به آبجکت استاندارد GeoJSON Feature.
-        آماده برای رندر در Leaflet، Mapbox، QGIS و سرورهای نقشه نشان.
-        """
+        """تبدیل مستقیم این کسب‌وکار به آبجکت استاندارد GeoJSON Feature."""
         geometry = None
         if self.coordinates:
             geometry = {
@@ -399,6 +374,12 @@ class BusinessPOI(BaseModel):
                 "instagram": self.contacts.instagram_id,
                 "audit_status_neshan": self.audit.neshan_status.value,
                 "confidence_score": self.confidence_score,
+                
+                # 🚨 تزریق دیتای پزشکی به خروجی نقشه!
+                "health_tier": self.health_report.tier,
+                "health_score": self.health_report.health_score,
+                "dashboard_badges": self.health_report.dashboard_badges,
+                
                 "facilities": self.facilities.model_dump(),
                 "working_hours": self.working_hours.model_dump(),
                 "images_count": len(self.image_urls)
