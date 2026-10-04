@@ -1,0 +1,44 @@
+# .github/workflows/weekly_crawler.yml
+# 🤖 شیفت شبانه هفتگی: اجرای جمعه‌ها راس ساعت ۲۳:۰۰ به وقت ایران
+name: Weekly Map Gap Crawler
+
+on:
+  schedule:
+    # ساعت ۱۹:۳۰ به وقت UTC معادل ساعت ۲۳:۰۰ جمعه‌های ایران است
+    # (دقیقه ۳۰، ساعت ۱۹، هر روز ماه، هر ماهی، روز ۵ هفته که جمعه‌ست)
+    - cron: '30 19 * * 5'
+  
+  # اینم گذاشتم تا اگه خواستی وسط هفته دستی هم تست کنی (با دکمه Run workflow)، دستت باز باشه!
+  workflow_dispatch:
+
+jobs:
+  hunt-gaps:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 دریافت آخرین نسخه کدها از ریپو
+        uses: actions/checkout@v4
+
+      - name: 🐍 نصب پایتون
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 نصب کتابخانه‌ها و نیازمندی‌ها
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: 🚀 استارت عملیات با فیلتر ۷ روز گذشته
+        run: |
+          # اینجا فرمانده کل (pipeline یا main) رو با فلگ ۷ روزه صدا می‌زنیم!
+          python -m src.pipeline --days 7
+
+      - name: 💾 ذخیره و کامیت کردن خروجی‌ها و کش دیتابیس
+        run: |
+          git config --global user.name 'MapGap-Bot'
+          git config --global user.email 'bot@gapfiller.local'
+          git add data/ exports/
+          git commit -m "🤖 خروجی دیتای ۷ روز اخیر - $(date +'%Y-%m-%d')" || echo "موردی برای ذخیره پیدا نشد!"
+          git push
